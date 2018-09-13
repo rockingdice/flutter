@@ -371,23 +371,14 @@ void paintImage({
     return;
   Size outputSize = rect.size;
   Size inputSize = new Size(image.width.toDouble(), image.height.toDouble());
-  Offset sliceBorder;
-  if (centerSlice != null) {
-    sliceBorder = new Offset(
-      centerSlice.left + inputSize.width - centerSlice.right,
-      centerSlice.top + inputSize.height - centerSlice.bottom
-    );
-    outputSize -= sliceBorder;
-    inputSize -= sliceBorder;
-  }
+  
   fit ??= centerSlice == null ? BoxFit.scaleDown : BoxFit.fill;
   assert(centerSlice == null || (fit != BoxFit.none && fit != BoxFit.cover));
   final FittedSizes fittedSizes = applyBoxFit(fit, inputSize / scale, outputSize);
   final Size sourceSize = fittedSizes.source * scale;
   Size destinationSize = fittedSizes.destination;
   if (centerSlice != null) {
-    outputSize += sliceBorder;
-    destinationSize += sliceBorder;
+    centerSlice = centerSlice.topLeft * scale & centerSlice.size * scale;
     // We don't have the ability to draw a subset of the image at the same time
     // as we apply a nine-patch stretch.
     assert(sourceSize == inputSize, 'centerSlice was used with a BoxFit that does not guarantee that the image is fully visible.');
@@ -430,8 +421,13 @@ void paintImage({
     for (Rect tileRect in _generateImageTileRects(rect, destinationRect, repeat))
       canvas.drawImageRect(image, sourceRect, tileRect, paint);
   } else {
-    for (Rect tileRect in _generateImageTileRects(rect, destinationRect, repeat))
+    for (Rect tileRect in _generateImageTileRects(rect, destinationRect, repeat)) {
+      canvas.save();
+      canvas.scale(1.0/scale, 1.0/scale);
+      tileRect = tileRect.topLeft * scale & tileRect.size * scale;
       canvas.drawImageNine(image, centerSlice, tileRect, paint);
+      canvas.restore();
+    }
   }
   if (needSave)
     canvas.restore();
