@@ -377,15 +377,6 @@ void paintImage({
     return;
   Size outputSize = rect.size;
   Size inputSize = Size(image.width.toDouble(), image.height.toDouble());
-  Offset sliceBorder;
-  if (centerSlice != null) {
-    sliceBorder = Offset(
-      centerSlice.left + inputSize.width - centerSlice.right,
-      centerSlice.top + inputSize.height - centerSlice.bottom
-    );
-    outputSize -= sliceBorder;
-    inputSize -= sliceBorder;
-  }
 
   fit ??= centerSlice == null ? BoxFit.scaleDown : BoxFit.fill;
   assert(centerSlice == null || (fit != BoxFit.none && fit != BoxFit.cover));
