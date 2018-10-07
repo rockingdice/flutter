@@ -35,8 +35,8 @@ class BuildAotCommand extends BuildSubCommand {
       )
       ..addMultiOption('ios-arch',
         splitCommas: true,
-        defaultsTo: defaultIOSArchs.map(getNameForIOSArch),
-        allowed: IOSArch.values.map(getNameForIOSArch),
+        defaultsTo: defaultIOSArchs.map<String>(getNameForIOSArch),
+        allowed: IOSArch.values.map<String>(getNameForIOSArch),
         help: 'iOS architectures to build.',
       )
       ..addMultiOption(FlutterOptions.kExtraFrontEndOptions,
@@ -77,7 +77,7 @@ class BuildAotCommand extends BuildSubCommand {
     final String outputPath = argResults['output-dir'] ?? getAotBuildDirectory();
     try {
       String mainPath = findMainDartFile(targetFile);
-      final AOTSnapshotter snapshotter = new AOTSnapshotter();
+      final AOTSnapshotter snapshotter = AOTSnapshotter();
 
       // Compile to kernel.
       mainPath = await snapshotter.compileKernel(
@@ -112,14 +112,14 @@ class BuildAotCommand extends BuildSubCommand {
             outputPath: outputPath,
             buildSharedLibrary: false,
             extraGenSnapshotOptions: argResults[FlutterOptions.kExtraGenSnapshotOptions],
-          ).then((int buildExitCode) {
+          ).then<int>((int buildExitCode) {
             return buildExitCode;
           });
         });
 
         // Merge arch-specific App.frameworks into a multi-arch App.framework.
-        if ((await Future.wait(exitCodes.values)).every((int buildExitCode) => buildExitCode == 0)) {
-          final Iterable<String> dylibs = iosBuilds.values.map((String outputDir) => fs.path.join(outputDir, 'App.framework', 'App'));
+        if ((await Future.wait<int>(exitCodes.values)).every((int buildExitCode) => buildExitCode == 0)) {
+          final Iterable<String> dylibs = iosBuilds.values.map<String>((String outputDir) => fs.path.join(outputDir, 'App.framework', 'App'));
           fs.directory(fs.path.join(outputPath, 'App.framework'))..createSync();
           await runCheckedAsync(<String>['lipo']
             ..addAll(dylibs)
@@ -145,8 +145,7 @@ class BuildAotCommand extends BuildSubCommand {
         );
         if (snapshotExitCode != 0) {
           status?.cancel();
-          printError('Snapshotting exited with non-zero exit code: $snapshotExitCode');
-          return;
+          throwToolExit('Snapshotting exited with non-zero exit code: $snapshotExitCode');
         }
       }
     } on String catch (error) {

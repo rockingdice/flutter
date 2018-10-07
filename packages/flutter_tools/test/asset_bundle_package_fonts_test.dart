@@ -89,8 +89,8 @@ $fontsSection
     }
 
     expect(
-      utf8.decode(await bundle.entries['FontManifest.json'].contentsAsBytes()),
-      expectedAssetManifest,
+      json.decode(utf8.decode(await bundle.entries['FontManifest.json'].contentsAsBytes())),
+      json.decode(expectedAssetManifest),
     );
   }
 
@@ -104,7 +104,7 @@ $fontsSection
     FileSystem testFileSystem;
 
     setUp(() async {
-      testFileSystem = new MemoryFileSystem(
+      testFileSystem = MemoryFileSystem(
         style: platform.isWindows
           ? FileSystemStyle.windows
           : FileSystemStyle.posix,
