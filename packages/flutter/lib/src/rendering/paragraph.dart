@@ -482,7 +482,7 @@ class RenderParagraph extends RenderBox {
       final TextDirection initialDirection = currentDirection;
       final TextSelection selection = TextSelection(baseOffset: start, extentOffset: end);
       final List<ui.TextBox> rects = getBoxesForSelection(selection);
-      Rect rect;
+      Rect rect = Rect.fromLTWH(0.0, 0.0, 0.0, 0.0);
       for (ui.TextBox textBox in rects) {
         rect ??= textBox.toRect();
         rect = rect.expandToInclude(textBox.toRect());
