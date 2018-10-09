@@ -182,14 +182,14 @@ class _CupertinoPickerState extends State<CupertinoPicker> {
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: <Color>[
-                Color(0xFFFFFFFF),
-                Color(0xF2FFFFFF),
-                Color(0xDDFFFFFF),
                 Color(0x00FFFFFF),
                 Color(0x00FFFFFF),
-                Color(0xDDFFFFFF),
-                Color(0xF2FFFFFF),
-                Color(0xFFFFFFFF),
+                Color(0x00FFFFFF),
+                Color(0x00FFFFFF),
+                Color(0x00FFFFFF),
+                Color(0x00FFFFFF),
+                Color(0x00FFFFFF),
+                Color(0x00FFFFFF),
               ],
               stops: <double>[
                 0.0, 0.05, 0.09, 0.22, 0.78, 0.91, 0.95, 1.0,
