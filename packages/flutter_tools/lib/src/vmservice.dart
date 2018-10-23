@@ -37,7 +37,7 @@ _OpenChannel _openChannel = _defaultOpenChannel;
 /// hot mode.
 ///
 /// See: https://github.com/dart-lang/sdk/issues/30023
-typedef ReloadSources = Future<Null> Function(
+typedef ReloadSources = Future<void> Function(
   String isolateId, {
   bool force,
   bool pause,
@@ -66,7 +66,7 @@ Future<StreamChannel<String>> _defaultOpenChannel(Uri uri) async {
     printTrace('This was attempt #$attempts. Will retry in $delay.');
 
     // Delay next attempt.
-    await Future<Null>.delayed(delay);
+    await Future<void>.delayed(delay);
 
     // Back off exponentially.
     delay *= 2;
@@ -102,6 +102,7 @@ const Duration kLongRequestTimeout = Duration(minutes: 1);
 /// Used for RPC requests that should never take a long time.
 const Duration kShortRequestTimeout = Duration(seconds: 5);
 
+// TODO(flutter/flutter#23031): Test this.
 /// A connection to the Dart VM Service.
 class VMService {
   VMService._(
@@ -260,7 +261,7 @@ class VMService {
   /// Whether our connection to the VM service has been closed;
   bool get isClosed => _peer.isClosed;
 
-  Future<Null> get done async {
+  Future<void> get done async {
     await _peer.done;
   }
 
@@ -332,7 +333,7 @@ class VMService {
     _getEventController(streamId).add(event);
   }
 
-  Future<Null> _streamListen(String streamId) async {
+  Future<void> _streamListen(String streamId) async {
     if (!_listeningFor.contains(streamId)) {
       _listeningFor.add(streamId);
       await _sendRequest('streamListen', <String, dynamic>{ 'streamId': streamId });
@@ -344,7 +345,7 @@ class VMService {
     return await _vm.reload();
   }
 
-  Future<Null> refreshViews() async {
+  Future<void> refreshViews() async {
     if (!vm.isFlutterEngine)
       return;
     await vm.refreshViews();
@@ -559,7 +560,20 @@ abstract class ServiceObject {
 }
 
 class ServiceEvent extends ServiceObject {
-  /// The possible 'kind' values.
+  ServiceEvent._empty(ServiceObjectOwner owner) : super._empty(owner);
+
+  String _kind;
+  String get kind => _kind;
+  DateTime _timestamp;
+  DateTime get timestamp => _timestamp;
+  String _extensionKind;
+  String get extensionKind => _extensionKind;
+  Map<String, dynamic> _extensionData;
+  Map<String, dynamic> get extensionData => _extensionData;
+  List<Map<String, dynamic>> _timelineEvents;
+  List<Map<String, dynamic>> get timelineEvents => _timelineEvents;
+
+  // The possible 'kind' values.
   static const String kVMUpdate               = 'VMUpdate';
   static const String kIsolateStart           = 'IsolateStart';
   static const String kIsolateRunnable        = 'IsolateRunnable';
@@ -586,19 +600,6 @@ class ServiceEvent extends ServiceObject {
   static const String kConnectionClosed       = 'ConnectionClosed';
   static const String kLogging                = '_Logging';
   static const String kExtension              = 'Extension';
-
-  ServiceEvent._empty(ServiceObjectOwner owner) : super._empty(owner);
-
-  String _kind;
-  String get kind => _kind;
-  DateTime _timestamp;
-  DateTime get timestamp => _timestamp;
-  String _extensionKind;
-  String get extensionKind => _extensionKind;
-  Map<String, dynamic> _extensionData;
-  Map<String, dynamic> get extensionData => _extensionData;
-  List<Map<String, dynamic>> _timelineEvents;
-  List<Map<String, dynamic>> get timelineEvents => _timelineEvents;
 
   @override
   void _update(Map<String, dynamic> map, bool mapIsRef) {
@@ -948,7 +949,7 @@ class VM extends ServiceObjectOwner {
     return invokeRpcRaw('_getVMTimeline', timeout: kLongRequestTimeout);
   }
 
-  Future<Null> refreshViews() async {
+  Future<void> refreshViews() async {
     if (!isFlutterEngine)
       return;
     _viewCache.clear();
@@ -1277,7 +1278,7 @@ class Isolate extends ServiceObjectOwner {
 
   Future<Map<String, dynamic>> flutterToggleWidgetInspector() => _flutterToggle('inspector.show');
 
-  Future<Null> flutterDebugAllowBanner(bool show) async {
+  Future<void> flutterDebugAllowBanner(bool show) async {
     await invokeFlutterExtensionRpcRaw(
       'ext.flutter.debugAllowBanner',
       params: <String, dynamic>{ 'enabled': show ? 'true' : 'false' },
@@ -1293,10 +1294,6 @@ class Isolate extends ServiceObjectOwner {
       timeout: kShortRequestTimeout,
       timeoutFatal: true,
     );
-  }
-
-  Future<bool> flutterFrameworkPresent() async {
-    return await invokeFlutterExtensionRpcRaw('ext.flutter.frameworkPresent') != null;
   }
 
   Future<Map<String, dynamic>> uiWindowScheduleFrame() async {
@@ -1412,12 +1409,12 @@ class FlutterView extends ServiceObject {
   }
 
   // TODO(johnmccutchan): Report errors when running failed.
-  Future<Null> runFromSource(Uri entryUri,
+  Future<void> runFromSource(Uri entryUri,
                              Uri packagesUri,
                              Uri assetsDirectoryUri) async {
     final String viewId = id;
     // When this completer completes the isolate is running.
-    final Completer<Null> completer = Completer<Null>();
+    final Completer<void> completer = Completer<void>();
     final StreamSubscription<ServiceEvent> subscription =
       (await owner.vm.vmService.onIsolateEvent).listen((ServiceEvent event) {
       // TODO(johnmccutchan): Listen to the debug stream and catch initial
@@ -1425,7 +1422,7 @@ class FlutterView extends ServiceObject {
       if (event.kind == ServiceEvent.kIsolateRunnable) {
         printTrace('Isolate is runnable.');
         if (!completer.isCompleted)
-          completer.complete(null);
+          completer.complete();
       }
     });
     await owner.vm.runInView(viewId,
@@ -1437,7 +1434,7 @@ class FlutterView extends ServiceObject {
     await subscription.cancel();
   }
 
-  Future<Null> setAssetDirectory(Uri assetsDirectory) async {
+  Future<void> setAssetDirectory(Uri assetsDirectory) async {
     assert(assetsDirectory != null);
     await owner.vmService.vm.invokeRpc<ServiceObject>('_flutter.setAssetBundlePath',
         params: <String, dynamic>{
@@ -1449,7 +1446,7 @@ class FlutterView extends ServiceObject {
 
   bool get hasIsolate => _uiIsolate != null;
 
-  Future<Null> flushUIThreadTasks() async {
+  Future<void> flushUIThreadTasks() async {
     await owner.vm.invokeRpcRaw('_flutter.flushUIThreadTasks',
       params: <String, dynamic>{'isolateId': _uiIsolate.id});
   }

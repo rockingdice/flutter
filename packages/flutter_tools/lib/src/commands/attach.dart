@@ -37,6 +37,7 @@ final String ipv4Loopback = InternetAddress.loopbackIPv4.address;
 class AttachCommand extends FlutterCommand {
   AttachCommand({bool verboseHelp = false, this.hotRunnerFactory}) {
     addBuildModeFlags(defaultToRelease: false);
+    usesIsolateFilterOption(hide: !verboseHelp);
     usesTargetOption();
     usesFilesystemOptions(hide: !verboseHelp);
     argParser
@@ -50,7 +51,7 @@ class AttachCommand extends FlutterCommand {
       )..addFlag('machine',
           hide: !verboseHelp,
           negatable: false,
-          help: 'Handle machine structured JSON command input and provide output\n'
+          help: 'Handle machine structured JSON command input and provide output '
                 'and progress in machine friendly format.',
       );
     hotRunnerFactory ??= HotRunnerFactory();
@@ -76,7 +77,7 @@ class AttachCommand extends FlutterCommand {
   }
 
   @override
-  Future<Null> validateCommand() async {
+  Future<void> validateCommand() async {
     await super.validateCommand();
     if (await findTargetDevice() == null)
       throwToolExit(null);
@@ -84,7 +85,7 @@ class AttachCommand extends FlutterCommand {
   }
 
   @override
-  Future<Null> runCommand() async {
+  Future<FlutterCommandResult> runCommand() async {
     Cache.releaseLockEarly();
 
     await _validateArguments();
@@ -122,6 +123,7 @@ class AttachCommand extends FlutterCommand {
         dillOutputPath: argResults['output-dill'],
         fileSystemRoots: argResults['filesystem-root'],
         fileSystemScheme: argResults['filesystem-scheme'],
+        viewFilter: argResults['isolate-filter'],
       );
       flutterDevice.observatoryUris = <Uri>[ observatoryUri ];
       final HotRunner hotRunner = hotRunnerFactory.build(
@@ -152,6 +154,7 @@ class AttachCommand extends FlutterCommand {
       final List<ForwardedPort> ports = device.portForwarder.forwardedPorts.toList();
       ports.forEach(device.portForwarder.unforward);
     }
+    return null;
   }
 
   Future<void> _validateArguments() async {}
