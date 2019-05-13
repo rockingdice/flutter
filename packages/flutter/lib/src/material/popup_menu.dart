@@ -21,6 +21,9 @@ import 'theme.dart';
 // Examples can assume:
 // enum Commands { heroAndScholar, hurricaneCame }
 // dynamic _heroAndScholar;
+// dynamic _selection;
+// BuildContext context;
+// void setState(VoidCallback fn) { }
 
 const Duration _kMenuDuration = Duration(milliseconds: 300);
 const double _kBaselineOffsetFromBottom = 20.0;
@@ -107,8 +110,7 @@ class PopupMenuDivider extends PopupMenuEntry<Null> {
   final double height;
 
   @override
-  // ignore: prefer_void_to_null, https://github.com/dart-lang/sdk/issues/34416
-  bool represents(Null value) => false;
+  bool represents(void value) => false;
 
   @override
   _PopupMenuDividerState createState() => _PopupMenuDividerState();
@@ -132,7 +134,7 @@ class _PopupMenuDividerState extends State<PopupMenuDivider> {
 /// [PopupMenuItem] is 48 pixels high. If you use a widget with a different
 /// height, it must be specified in the [height] property.
 ///
-/// ## Sample code
+/// {@tool sample}
 ///
 /// Here, a [Text] widget is used with a popup menu item. The `WhyFarther` type
 /// is an enum, not shown here.
@@ -143,6 +145,7 @@ class _PopupMenuDividerState extends State<PopupMenuDivider> {
 ///   child: Text('Working a lot harder'),
 /// )
 /// ```
+/// {@end-tool}
 ///
 /// See the example at [PopupMenuButton] for how this example could be used in a
 /// complete menu, and see the example at [CheckedPopupMenuItem] for one way to
@@ -253,7 +256,7 @@ class PopupMenuItemState<T, W extends PopupMenuItem<T>> extends State<W> {
         baseline: widget.height - _kBaselineOffsetFromBottom,
         baselineType: style.textBaseline,
         child: buildChild(),
-      )
+      ),
     );
     if (!widget.enabled) {
       final bool isDark = theme.brightness == Brightness.dark;
@@ -283,7 +286,7 @@ class PopupMenuItemState<T, W extends PopupMenuItem<T>> extends State<W> {
 /// of a [PopupMenuItem]. The horizontal layout uses a [ListTile]; the checkmark
 /// is an [Icons.done] icon, shown in the [ListTile.leading] position.
 ///
-/// ## Sample code
+/// {@tool sample}
 ///
 /// Suppose a `Commands` enum exists that lists the possible commands from a
 /// particular popup menu, including `Commands.heroAndScholar` and
@@ -321,6 +324,7 @@ class PopupMenuItemState<T, W extends PopupMenuItem<T>> extends State<W> {
 ///   ],
 /// )
 /// ```
+/// {@end-tool}
 ///
 /// In particular, observe how the second menu item uses a [ListTile] with a
 /// blank [Icon] in the [ListTile.leading] position to get the same alignment as
@@ -408,7 +412,7 @@ class _CheckedPopupMenuItemState<T> extends PopupMenuItemState<T, CheckedPopupMe
       enabled: widget.enabled,
       leading: FadeTransition(
         opacity: _opacity,
-        child: Icon(_controller.isDismissed ? null : Icons.done)
+        child: Icon(_controller.isDismissed ? null : Icons.done),
       ),
       title: widget.child,
     );
@@ -435,7 +439,7 @@ class _PopupMenu<T> extends StatelessWidget {
       final double end = (start + 1.5 * unit).clamp(0.0, 1.0);
       final CurvedAnimation opacity = CurvedAnimation(
         parent: route.animation,
-        curve: Interval(start, end)
+        curve: Interval(start, end),
       );
       Widget item = route.items[i];
       if (route.initialValue != null && route.items[i].represents(route.initialValue)) {
@@ -601,7 +605,7 @@ class _PopupMenuRoute<T> extends PopupRoute<T> {
     return CurvedAnimation(
       parent: super.createAnimation(),
       curve: Curves.linear,
-      reverseCurve: const Interval(0.0, _kMenuCloseIntervalEnd)
+      reverseCurve: const Interval(0.0, _kMenuCloseIntervalEnd),
     );
   }
 
@@ -708,13 +712,14 @@ class _PopupMenuRoute<T> extends PopupRoute<T> {
 ///    semantics.
 Future<T> showMenu<T>({
   @required BuildContext context,
-  RelativeRect position,
+  @required RelativeRect position,
   @required List<PopupMenuEntry<T>> items,
   T initialValue,
   double elevation = 8.0,
   String semanticLabel,
 }) {
   assert(context != null);
+  assert(position != null);
   assert(items != null && items.isNotEmpty);
   assert(debugCheckHasMaterialLocalizations(context));
   String label = semanticLabel;
@@ -767,7 +772,7 @@ typedef PopupMenuItemBuilder<T> = List<PopupMenuEntry<T>> Function(BuildContext 
 /// If both are null, then a standard overflow icon is created (depending on the
 /// platform).
 ///
-/// ## Sample code
+/// {@tool sample}
 ///
 /// This example shows a menu with four items, selecting between an enum's
 /// values and setting a `_selection` field based on the selection.
@@ -800,6 +805,7 @@ typedef PopupMenuItemBuilder<T> = List<PopupMenuEntry<T>> Function(BuildContext 
 ///   ],
 /// )
 /// ```
+/// {@end-tool}
 ///
 /// See also:
 ///

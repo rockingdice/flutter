@@ -2,8 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:io';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/material.dart';
 
 import '../rendering/mock_canvas.dart';
 import 'semantics_tester.dart';
@@ -27,7 +30,7 @@ void main() {
             rect: Rect.fromLTRB(0.0, 0.0, 800.0, 600.0),
             label: 'a',
             textDirection: TextDirection.rtl,
-          )
+          ),
         ],
       ),
     ));
@@ -61,7 +64,7 @@ void main() {
             rect: Rect.fromLTRB(0.0, 0.0, 800.0, 600.0),
             label: 'a',
             textDirection: TextDirection.rtl,
-          )
+          ),
         ],
       ),
     ));
@@ -95,7 +98,7 @@ void main() {
             rect: Rect.fromLTRB(0.0, 0.0, 800.0, 600.0),
             label: 'a',
             textDirection: TextDirection.rtl,
-          )
+          ),
         ],
       ),
     ));
@@ -117,7 +120,7 @@ void main() {
             rect: Rect.fromLTRB(0.0, 0.0, 800.0, 600.0),
             label: 'a',
             textDirection: TextDirection.rtl,
-          )
+          ),
         ],
       ),
     ));
@@ -139,12 +142,55 @@ void main() {
             rect: Rect.fromLTRB(0.0, 0.0, 800.0, 600.0),
             label: 'a',
             textDirection: TextDirection.rtl,
-          )
+          ),
         ],
       ),
     ));
     expect(find.byType(Opacity), paints..paragraph());
 
     semantics.dispose();
+  });
+
+  testWidgets('offset is correctly handled in Opacity', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: RepaintBoundary(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: List<Widget>.generate(10, (int index) {
+                  return Opacity(
+                    opacity: 0.5,
+                    child: Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: Container(
+                          color: Colors.blue,
+                          height: 50,
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ),
+          ),
+        ),
+      )
+    );
+    await expectLater(
+      find.byType(RepaintBoundary).first,
+      matchesGoldenFile('opacity_test.offset.1.png'),
+      skip: !Platform.isLinux,
+    );
+  });
+
+  testWidgets('empty opacity does not crash', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      RepaintBoundary(child: Opacity(opacity: 0.5, child: Container())),
+    );
+    final Element element = find.byType(RepaintBoundary).first.evaluate().single;
+    // The following line will send the layer to engine and cause crash if an
+    // empty opacity layer is sent.
+    await element.renderObject.layer.toImage(Rect.fromLTRB(0.0, 0.0, 1.0, 1.0));
   });
 }
