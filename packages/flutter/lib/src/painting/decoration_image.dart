@@ -447,10 +447,15 @@ void paintImage({
         canvas.drawImageRect(image, sourceRect, tileRect, paint);
     }
   } else {
+    //@Rockingdice https://github.com/flutter/flutter/issues/20013
     if (repeat == ImageRepeat.noRepeat) {
-      canvas.drawImageNine(image, centerSlice, destinationRect, paint);
+      canvas.save();
+      canvas.scale(1.0 / scale, 1.0 / scale);
+      Rect tileRect = destinationRect;
+      tileRect = tileRect.topLeft * scale & tileRect.size * scale;
+      canvas.drawImageNine(image, centerSlice, tileRect, paint);
+      canvas.restore();
     } else {
-      //@Rockingdice https://github.com/flutter/flutter/issues/20013
       for (Rect tileRect in _generateImageTileRects(rect, destinationRect, repeat)) {
         canvas.save();
         canvas.scale(1.0/scale, 1.0/scale);
